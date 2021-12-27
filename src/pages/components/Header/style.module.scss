@@ -1,0 +1,43 @@
+.container {
+  border-bottom: 0.2px solid #515151;
+  margin: 2rem 0;
+}
+.content {
+  width: 100%;
+  max-width: 1080px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 auto;
+
+  a:nth-child(n-2) {
+    border: 0;
+    display: inline-block;
+    padding: 1.4rem 1.5rem;
+    height: 4.5rem;
+    position: relative;
+    color: var(--grey-100);
+    &:hover {
+      color: white;
+    }
+    &.active::after {
+      content: ' ';
+      height: 4px;
+      background: var(--grey-300);
+      width: 100%;
+      position: absolute;
+      bottom: 1px;
+      border-radius: 3rem 3rem 0 0;
+      left: 0;
+    }
+  }
+}
+.LogoAndMenu {
+  display: flex;
+  align-items: center;
+
+  span:nth-child(1) {
+    padding-right: 3rem;
+    cursor: pointer;
+  }
+}
