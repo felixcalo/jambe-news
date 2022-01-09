@@ -2,7 +2,7 @@
 import Head from 'next/head';
 import type { GetServerSideProps, GetStaticProps } from 'next';
 import style from './home.module.scss';
-import { stripe } from '../service/stripe';
+import { stripe } from '../service/stripe-backend-integration';
 import { SubscribeButton } from '../components/SubscribeButton';
 
 interface ProductProps {
