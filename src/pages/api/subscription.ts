@@ -18,7 +18,6 @@ interface User {
 export default async function (req: NextApiRequest, resp: NextApiResponse) {
   if (req.method == 'POST') {
     const session = await getSession({ req });
-    const email = session?.user?.email;
     const user = await fauna.query<User>(
       query.Get(
         query.Match(

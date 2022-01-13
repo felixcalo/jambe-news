@@ -1,0 +1,104 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import { stripe } from '../../service/stripe-backend-integration';
+import { getSession } from 'next-auth/react';
+import { fauna } from '../../service/faunaDB';
+import { query } from 'faunadb';
+import { useState } from 'react';
+
+interface User {
+  ref: {
+    id: string;
+  };
+  data: {
+    email: string;
+    stripeCustomerId: string;
+  };
+}
+interface Session {
+  user?: {
+    name?: string;
+    email?: string;
+    image?: string;
+  };
+  expires?: string;
+}
+interface StripeCustomer {
+  id: string;
+}
+
+export default async function (req: NextApiRequest, resp: NextApiResponse) {
+  if (req.method == 'POST') {
+    const session = await getSession({ req });
+    const user = await getUser(session);
+    const customerId = await getStripeCustomerId(session, user);
+    const stripeCheckoutSessioon = await getStripeCheckoutSessioon(customerId);
+    return resp.status(200).json({ session: stripeCheckoutSessioon.id });
+  } else {
+    resp.setHeader('Allow', 'POST');
+    resp.status(405).end('method not allow');
+  }
+}
+
+async function getStripeCustomerId(
+  session: Session,
+  user: User
+): Promise<string> {
+  const [stripeCustomerId, setStripeCustomerId] = useState('');
+  setStripeCustomerId(user.data.stripeCustomerId);
+  // user.then((res) => setStripeCustomerId(res.data.stripeCustomerId));
+  if (!stripeCustomerId) {
+    const stripeCustomer = await createStripeCustomer(session);
+    await updateCustomer(user, stripeCustomer.id);
+    setStripeCustomerId(stripeCustomer.id);
+  }
+  return stripeCustomerId;
+}
+
+async function createStripeCustomer(session: Session): Promise<StripeCustomer> {
+  const stripeCustomer = await stripe.customers.create({
+    email: session?.user?.email + '',
+  });
+  return stripeCustomer;
+}
+
+async function updateCustomer(user: Promise<User>, stripeCustomerId: string) {
+  await fauna.query(
+    query.Update(
+      query.Ref(
+        query.Collection('users'),
+        user.then((res) => res.ref.id)
+      ),
+      {
+        data: {
+          stripeCustomerId: stripeCustomerId,
+        },
+      }
+    )
+  );
+}
+
+async function getUser(session: Session): Promise<User> {
+  const user = await fauna.query<User>(
+    query.Get(
+      query.Match(
+        query.Index('user_by_email'),
+        query.Casefold(session?.user?.email + '')
+      )
+    )
+  );
+  return user;
+}
+
+async function getStripeCheckoutSessioon(customerId: string) {
+  const stripeCheckoutSessioon = await stripe.checkout.sessions.create({
+    customer: customerId,
+    success_url: process.env.NEXT_PUBLIC_SUCCESS_URL + '',
+    cancel_url: process.env.NEXT_PUBLIC_CANCEL_URL + '',
+    allow_promotion_codes: true,
+    line_items: [{ price: process.env.PRICE_API_KEY, quantity: 1 }],
+    mode: 'subscription',
+    payment_method_types: ['card'],
+    billing_address_collection: 'required',
+  });
+  return stripeCheckoutSessioon;
+}

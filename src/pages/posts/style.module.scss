@@ -1,0 +1,39 @@
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+.posts {
+  margin: 5rem auto 0;
+  width: 700px;
+  a {
+    display: block;
+
+    & + a {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 0.2px solid #515151;
+    }
+    time {
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      color: var(--grey-100);
+    }
+    strong {
+      font-size: 1.5rem;
+      display: block;
+      margin-top: 1rem;
+      line-height: 2rem;
+      transition: color 0.25s;
+    }
+    p {
+      color: var(--grey-100);
+      margin-top: 1rem;
+      line-height: 1.625rem;
+    }
+    & strong:hover {
+      color: var(--grey-300);
+    }
+  }
+}
